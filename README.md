@@ -109,3 +109,7 @@ terraform output notification_db_endpoint
 - **AWS VPC** Private subnets
 - **S3** Remote state backend
 - **GitHub Actions** CI/CD
+
+## Acknowledgments
+
+This project was developed with the assistance of [Claude](https://claude.com/claude-code) (Anthropic) as an AI pair-programming tool for code implementation, debugging, and documentation.
