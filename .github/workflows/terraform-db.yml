@@ -30,6 +30,14 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: List available PostgreSQL versions
+        run: |
+          echo "Available PostgreSQL 16.x versions in us-east-1:"
+          aws rds describe-db-engine-versions \
+            --engine postgres \
+            --query "DBEngineVersions[?starts_with(EngineVersion,'16.')].EngineVersion" \
+            --output text --region us-east-1
+
       - name: Terraform Init
         run: terraform init
 
