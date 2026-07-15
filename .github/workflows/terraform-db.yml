@@ -2,7 +2,7 @@ name: Provision DB Infrastructure
 
 on:
   push:
-    branches: ["main", "feature/modulo5"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
   workflow_dispatch:
@@ -48,14 +48,14 @@ jobs:
         run: terraform plan
 
       - name: Terraform Apply
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/modulo5') || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         env:
           TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
         run: terraform apply -auto-approve
 
       - name: Print RDS endpoints
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/modulo5') || github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         run: |
           echo "============================================"
           echo "  RDS Endpoints (use para os GitHub Secrets)"
