@@ -1,0 +1,71 @@
+name: Provision DB Infrastructure
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform Apply DB
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: List available PostgreSQL versions
+        run: |
+          echo "Available PostgreSQL 16.x versions in us-east-1:"
+          aws rds describe-db-engine-versions \
+            --engine postgres \
+            --query "DBEngineVersions[?starts_with(EngineVersion,'16.')].EngineVersion" \
+            --output text --region us-east-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        env:
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform apply -auto-approve
+
+      - name: Print RDS endpoints
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        run: |
+          echo "============================================"
+          echo "  RDS Endpoints (use para os GitHub Secrets)"
+          echo "============================================"
+          echo ""
+          echo "AUTH_DB_URL=jdbc:postgresql://$(terraform output -raw auth_db_endpoint)/fiapx_auth"
+          echo "UPLOAD_DB_URL=jdbc:postgresql://$(terraform output -raw upload_db_endpoint)/fiapx_upload"
+          echo "PROCESSOR_DB_URL=jdbc:postgresql://$(terraform output -raw processor_db_endpoint)/fiapx_processor"
+          echo "STATUS_DB_URL=jdbc:postgresql://$(terraform output -raw status_db_endpoint)/fiapx_status"
+          echo "NOTIFICATION_DB_URL=jdbc:postgresql://$(terraform output -raw notification_db_endpoint)/fiapx_notification"
+          echo ""
+          echo "DB_USERNAME=$(terraform output -raw db_username)"
+          echo "============================================"
