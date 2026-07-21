@@ -2,6 +2,10 @@
 
 Terraform infrastructure for provisioning isolated PostgreSQL RDS databases for the FIAP-X video processing platform.
 
+![FIAP-X platform architecture](docs/architecture.png)
+
+> High-level architecture of the FIAP-X platform — microservices, choreographed saga over RabbitMQ, database-per-service (RDS), object storage (S3), running on EKS and provisioned with Terraform.
+
 ## Architecture
 
 Each microservice gets its own dedicated RDS instance, ensuring **complete database isolation** — no service can access another service's database directly.
@@ -16,7 +20,7 @@ Each microservice gets its own dedicated RDS instance, ensuring **complete datab
 
 ## Infrastructure Details
 
-- **Engine**: PostgreSQL 16.3
+- **Engine**: PostgreSQL 16.9
 - **Instance Class**: db.t3.micro
 - **Storage**: 20 GB (allocated)
 - **Accessibility**: Private subnets only (not publicly accessible)
@@ -29,7 +33,7 @@ Each microservice gets its own dedicated RDS instance, ensuring **complete datab
 This module depends on **[infra-k8s](https://github.com/Sala-16-Hackathon-FIAP/infra-k8s)** being applied first. It reads VPC and subnet IDs via Terraform remote state:
 
 ```
-S3 Bucket: fiapx-terraform-state
+S3 Bucket: fiapx-sala16-v2-terraform-state
 State Key:  k8s/terraform.tfstate
 ```
 
@@ -46,7 +50,7 @@ State Key:  k8s/terraform.tfstate
 State is stored remotely in S3:
 
 ```
-Bucket: fiapx-terraform-state
+Bucket: fiapx-sala16-v2-terraform-state
 Key:    rds/terraform.tfstate
 Region: us-east-1
 ```
@@ -105,7 +109,7 @@ terraform output notification_db_endpoint
 ## Technology Stack
 
 - **Terraform** ~> 5.0 (AWS Provider)
-- **AWS RDS** PostgreSQL 16.3
+- **AWS RDS** PostgreSQL 16.9
 - **AWS VPC** Private subnets
 - **S3** Remote state backend
 - **GitHub Actions** CI/CD
